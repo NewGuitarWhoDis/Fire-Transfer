@@ -1,0 +1,6 @@
+# Ignore all files and directories
+*
+
+# Include specific files or directories that you want to check
+!src/main.js
+!src/components/
