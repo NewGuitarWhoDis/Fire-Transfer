@@ -14,7 +14,8 @@
   "main": "background.js",
   "dependencies": {
     "core-js": "^3.8.3",
-    "vue": "^3.2.13"
+    "vue": "^3.2.13",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
@@ -32,8 +33,7 @@
     "extends": [
       "plugin:vue/vue3-essential"
     ],
-    "parserOptions": {
-    },
+    "parserOptions": {},
     "rules": {}
   },
   "browserslist": [

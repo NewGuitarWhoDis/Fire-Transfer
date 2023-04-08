@@ -10,8 +10,8 @@
       </div>
     </div>
     <div class="display">
-        <UploadComponent class="uploader"/>
-        <FriendsComponent v-show="IfFileIsSelected" />
+      <FriendsComponent v-if="isFileSelected == true" />
+      <UploadComponent @fileSelected="fileSelected" @isSelected="isSelected" v-else class="uploader"/>
     </div>
   </div>
 </template>
@@ -22,6 +22,8 @@ import MenuComponent from './components/menu/MenuComponent.vue'
 import FriendsComponent from './components/friends/FriendsComponent.vue'
 import UploadComponent from './components/upload/UploadComponent.vue'
 
+var peer = new Peer();
+
 export default {
   name: 'App',
   components: {
@@ -29,13 +31,60 @@ export default {
     FriendsComponent,
     UploadComponent
   },
-  data () {
+  data() {
     return {
+      isFileSelected: false,
+      FileSelected: []
     }
   },
   methods: {
-    
+    closeApp() {
+      window.close();
+    },
+    fileSelected(value) {
+      this.FileSelected = value;
+    },
+    isSelected() {
+      this.isFileSelected = true;
+    }
   }
+}
+
+peer.on('open', function(id) {
+  console.log('My peer ID is: ' + id);
+});
+
+peer.on('connection', function(conn) 
+{ 
+    console.log('peer connected');
+    conn.on('open', function() {
+        console.log('conn open');
+    });
+    conn.on('data', function(data) {
+        console.log(data);
+        saveByteArrayToFile(data.file, data.fileName, data.fileType);
+    });
+});
+
+function saveByteArrayToFile(byteArray, fileName, fileType) {
+  var bytes = new Uint8Array(byteArray); // pass your byte response to this constructor
+
+  var blob=new Blob([bytes], {type: fileType});// change resultByte to bytes
+
+  var link=document.createElement('a');
+  link.href=window.URL.createObjectURL(blob);
+  link.download=fileName;
+  link.click();  
+  
+  // var blob = new Blob([byteArray], {type: "application/pdf"});
+    // var url = URL.createObjectURL(blob);
+    // var a = document.createElement("a");
+    // document.body.appendChild(a);
+    // a.style = "display: none";
+    // a.href = url;
+    // a.download = fileName;
+    // a.click();
+    // URL.revokeObjectURL(url);
 }
 
 </script>

@@ -8,14 +8,41 @@
 </template>
 
 <script>
+
+import { store } from '../../store';
+
 export default {
+    data() {
+        return {
+            store
+        }
+    },
     methods: {
-        onInputChange() {
-            console.log('file selected');
-            this.$emit('uploaded');
+        async onInputChange() {
+            var file = document.getElementById('file-upload').files[0];
+            console.log(file);
+            var reader = new FileReader();
+            var fileByteArray = [];
+            reader.readAsArrayBuffer(file);
+            reader.onloadend = function (evt) {
+                if (evt.target.readyState == FileReader.DONE) {
+                var arrayBuffer = evt.target.result,
+                    array = new Uint8Array(arrayBuffer);
+                for (var i = 0; i < array.length; i++) {
+                    fileByteArray.push(array[i]);
+                    }
+                }
+            }
+            store.file = fileByteArray;
+            store.fileName = file.name;
+            store.fileType = file.type;
+            console.log(store.fileName);
+
+            this.$emit('isSelected', true);
         }
     }
 }
+
 </script>
 
 <style scoped>
