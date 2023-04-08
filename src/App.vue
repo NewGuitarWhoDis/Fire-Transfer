@@ -10,8 +10,10 @@
       </div>
     </div>
     <div class="display">
-      <FriendsComponent v-if="isFileSelected == true" />
-      <UploadComponent @fileSelected="fileSelected" @isSelected="isSelected" v-else class="uploader"/>
+      <FriendsComponent v-if="store.isSelected" />
+      <UploadComponent @fileSelected="fileSelected" v-else class="uploader"/>
+      <!-- <sendRequest v-if="sendRequest" /> -->
+      <p class="userid" @click="copyID()">Click Here to copy ID to clipboard</p>
     </div>
   </div>
 </template>
@@ -21,44 +23,54 @@
 import MenuComponent from './components/menu/MenuComponent.vue'
 import FriendsComponent from './components/friends/FriendsComponent.vue'
 import UploadComponent from './components/upload/UploadComponent.vue'
+import sendRequest from './components/sendRequest.vue'
+
+import { store } from './store';
 
 var peer = new Peer();
+
+getVersion();
 
 export default {
   name: 'App',
   components: {
     MenuComponent,
     FriendsComponent,
-    UploadComponent
+    UploadComponent,
+    sendRequest
   },
   data() {
     return {
       isFileSelected: false,
-      FileSelected: []
+      sendRequest: false,
+      FileSelected: [],
+      store
     }
   },
   methods: {
-    closeApp() {
+    closeApp: function() {
       window.close();
     },
     fileSelected(value) {
       this.FileSelected = value;
     },
-    isSelected() {
-      this.isFileSelected = true;
+    copyID() {
+      navigator.clipboard.writeText(this.store.id);
     }
   }
 }
 
 peer.on('open', function(id) {
   console.log('My peer ID is: ' + id);
+  store.id = id;
+  console.log(store.id);
 });
 
 peer.on('connection', function(conn) 
 { 
     console.log('peer connected');
+    this.sendRequest = true;
     conn.on('open', function() {
-        console.log('conn open');
     });
     conn.on('data', function(data) {
         console.log(data);
@@ -85,6 +97,12 @@ function saveByteArrayToFile(byteArray, fileName, fileType) {
     // a.download = fileName;
     // a.click();
     // URL.revokeObjectURL(url);
+}
+
+async function getVersion() {
+  const URL = await fetch('https://clickit.conorwestley.co.uk/');
+  URL.json()
+  console.log(URL.headers.get('version'));
 }
 
 </script>
@@ -121,7 +139,7 @@ function saveByteArrayToFile(byteArray, fileName, fileType) {
 }
 .uploader {
   position: relative;
-  bottom: 15px;
+  bottom: 24px;
 }
 
 .logo {
@@ -162,5 +180,12 @@ h1 {
   width: 90%;
   height: 90%;
   color: white;
+}
+.userid {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  color: rgb(105, 105, 105);
+  cursor: pointer;
 }
 </style>
