@@ -13,8 +13,15 @@
       <FriendsComponent v-if="store.isSelected" />
       <UploadComponent @fileSelected="fileSelected" v-else class="uploader"/>
       <!-- <sendRequest v-if="sendRequest" /> -->
+      <div class="toggle">
+        <label class="switch">
+         <input @click="toggleRecieve" type="checkbox">
+         <span class="slider round"></span>
+        </label>
+        <p>Recieve Files</p>
+      </div>
+      </div>
       <p class="userid" @click="copyID()">Click Here to copy ID to clipboard</p>
-    </div>
   </div>
 </template>
 
@@ -44,12 +51,21 @@ export default {
       isFileSelected: false,
       sendRequest: false,
       FileSelected: [],
-      store
+      store,
+      receiveProgressValue: 0,
     }
   },
   methods: {
     closeApp: function() {
       window.close();
+    },
+    toggleRecieve() {
+      if (store.recieveEnabled == false) {
+        store.recieveEnabled = true;
+      }
+      else {
+        store.recieveEnabled = false;
+      }
     },
     fileSelected(value) {
       this.FileSelected = value;
@@ -66,45 +82,55 @@ peer.on('open', function(id) {
   console.log(store.id);
 });
 
+let receivedSize = 0;
+let receiveBuffer = [];
+
 peer.on('connection', function(conn) 
 { 
-    console.log('peer connected');
-    this.sendRequest = true;
-    conn.on('open', function() {
-    });
-    conn.on('data', function(data) {
-        console.log(data);
-        saveByteArrayToFile(data.file, data.fileName, data.fileType);
-    });
+  if (store.recieveEnabled == false) {
+        conn.close();
+        console.log('connection closed');
+      }
+      else {
+        console.log('connection Recieved');
+        conn.send('Connection Recieved!');
+        this.sendRequest = true;
+        conn.on('data', function(data) {
+
+          if (data.fileName && data.fileType && data.fileSize) {
+            store.recievedFileName = data.fileName;
+            store.recievedFileType = data.fileType;
+            store.recievedFileSize = data.fileSize;
+            console.log("Received file info");
+          } else {
+            console.log(`Received Message ${data.byteLength}`);
+            receiveBuffer.push(data);
+            receivedSize += data.byteLength;
+            store.receiveProgressValue = receivedSize;
+
+            if (receivedSize == store.recievedFileSize) {
+              console.log("Received all data");
+
+              const received = new Blob(receiveBuffer);
+              
+              var link=document.createElement('a');
+              link.href=window.URL.createObjectURL(received);
+              link.download=store.recievedFileName;
+              link.click();  
+
+              receivedSize = 0;
+            }
+          }
+        });
+      }
 });
-
-function saveByteArrayToFile(byteArray, fileName, fileType) {
-  var bytes = new Uint8Array(byteArray); // pass your byte response to this constructor
-
-  var blob=new Blob([bytes], {type: fileType});// change resultByte to bytes
-
-  var link=document.createElement('a');
-  link.href=window.URL.createObjectURL(blob);
-  link.download=fileName;
-  link.click();  
-  
-  // var blob = new Blob([byteArray], {type: "application/pdf"});
-    // var url = URL.createObjectURL(blob);
-    // var a = document.createElement("a");
-    // document.body.appendChild(a);
-    // a.style = "display: none";
-    // a.href = url;
-    // a.download = fileName;
-    // a.click();
-    // URL.revokeObjectURL(url);
-}
 
 function getVersion() {
   var txt = "";
   // sample url used here, you can make it more dynamic as per your need.
   // used AJAX here to just hit the url & get the page source from those website. It's used here like the way CURL or file_get_contents (https://www.php.net/manual/en/function.file-get-contents.php) from PHP used to get the page source.
   $.ajax({
-      url: "https://jsfiddle.net/",
+      url: "https://newguitarwhodis.github.io/Fire-Transfer/",
 			error: function() {
 				txt = "Unable to retrieve webpage source HTML";
 			}, 
@@ -114,8 +140,14 @@ function getVersion() {
           response = $.parseHTML(response);
           $.each(response, function(i, el){
               if(el.nodeName.toString().toLowerCase() == 'meta' && $(el).attr("name") != null && typeof $(el).attr("name") != "undefined"){
-                  txt += $(el).attr("name") +"="+ ($(el).attr("content")?$(el).attr("content"):($(el).attr("value")?$(el).attr("value"):"")) +"<br>";
-                  console.log($(el).attr("name") ,"=", ($(el).attr("content")?$(el).attr("content"):($(el).attr("value")?$(el).attr("value"):"")), el);
+                if ($(el).attr("name") == "version") {
+                  if ($(el).attr("content") != "1.0.0") {
+                    alert("New version available! Please download the latest version from https://newguitarwhodis.github.io/Fire-Transfer/");
+                  }
+                }
+                
+                // txt += $(el).attr("name") +"="+ ($(el).attr("content")?$(el).attr("content"):($(el).attr("value")?$(el).attr("value"):"")) +"<br>";
+                  // console.log($(el).attr("name") ,"=", el);
               }
           });
       },
@@ -203,9 +235,81 @@ h1 {
 }
 .userid {
   position: absolute;
-  bottom: 15px;
+  bottom: -6px;
   right: 15px;
   color: rgb(105, 105, 105);
   cursor: pointer;
+}
+
+.toggle {
+  position: absolute;
+  bottom: 25px;
+  left: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgb(105, 105, 105);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 35px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #3f3f3f;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(14px);
+  -ms-transform: translateX(14px);
+  transform: translateX(14px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 </style>

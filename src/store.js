@@ -1,10 +1,15 @@
 import { reactive } from 'vue'
 
 export const store = reactive({
+  recieveEnabled: false,
+  uploadedFile: [],
   file: [],
   fileName: '',
   fileType: '',
-  uploadProgressValue: 0,
-  uploadProgressMax: 0,
+  ProgressMax: 0,
+  sendProgressValue: 0,
   isSelected: false,
+  recievedFileName: 0,
+  recievedFileType: "",
+  recievedFileSize: 0,
 })
