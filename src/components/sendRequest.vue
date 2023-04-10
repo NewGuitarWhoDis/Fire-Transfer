@@ -1,15 +1,38 @@
 <template>
     <div class="popup">
-        <h1>Snitzels would like to send you a file!</h1>
+        <h1>{{ name }} would like to send you a file!</h1>
         <div class="buttons">
-            <button class="accept">Accept</button>
-            <button class="decline">Decline</button>
+            <button @click="accept()" class="accept">Accept</button>
+            <button @click="decline()" class="decline">Decline</button>
         </div>
     </div>
 </template>
 
 <script>
+import { store } from '../store';
+
+var peer = new Peer();
+var conn;
+
 export default {
+    props: ['name'],
+    data() {
+        return {
+            store
+        }
+    },
+    methods: {
+        accept() {
+
+            conn = peer.connect(store.conn.peer);
+            conn.send('accept');
+
+        },
+        decline() {
+            conn = peer.connect(store.conn.peer);
+            conn.send('decline');
+        }
+    }
 }
 </script>
 
@@ -50,7 +73,7 @@ button {
 
 .popup {
     position: absolute;
-    bottom: 50px;
+    bottom: 65px;
     right: 0px;
     background: rgb(36, 36, 36);
     border-top-left-radius: 5px;
