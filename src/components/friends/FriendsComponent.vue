@@ -45,8 +45,6 @@ export default {
       let id = document.getElementById('Inputid').value;
       conn = peer.connect(id);
 
-      conn.send({ request: 'Connecting Request', from: store.id});
-
       peer.on('error', function(err){
         console.log('error');
       });
