@@ -2,6 +2,9 @@ import { reactive } from 'vue'
 
 export const store = reactive({
   recieveEnabled: false,
+  sendRequest: false,
+  senderName: '',
+  id: 0,
   uploadedFile: [],
   file: [],
   fileName: '',
@@ -12,4 +15,5 @@ export const store = reactive({
   recievedFileName: 0,
   recievedFileType: "",
   recievedFileSize: 0,
+  conn: null,
 })
